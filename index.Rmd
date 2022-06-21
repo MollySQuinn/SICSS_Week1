@@ -137,7 +137,7 @@ library(tidyverse)
 mtcars %>%
   rownames_to_column("model") %>% # add rownames as a column
   select(model, mpg, cyl, hp) %>% # select 4 columns
-  arrange(cyl) %>% # arrange them according to number of cylinders
+  arrange(cyl) %>% # arrange them according to number of cylinders (ascending)
   filter(cyl %in% c(4, 6)) %>% # only retain values where condition is TRUE
   mutate(model = str_to_lower(model)) %>% # change modelnames to lowercase
   group_by(cyl) %>% # change scope, effectively split up tibbles according to group_variable

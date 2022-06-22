@@ -74,20 +74,128 @@ uk_mps <- lists_members(
 ) 
 ```
 
+<!-- # Exercises -->
+
+<!-- ## Day 2 -->
+
+<!-- 1. Start a session with the tidyverse Wikipedia page. Adapt your user agent to some sort of different value. Proceed to Hadley Wickham's page. Go back. Go forth. Check the `session_history()` to see if it has worked. -->
+
+<!-- ```{r eval=FALSE} -->
+<!-- tidyverse_wiki <- "https://en.wikipedia.org/wiki/Tidyverse" -->
+<!-- hadley_wiki <- "https://en.wikipedia.org/wiki/Hadley_Wickham" -->
+<!-- user_agent <- httr::user_agent("Hi, I'm Felix and I try to steal your data.") -->
+<!-- ``` -->
+
+<!-- 2. Start a session on "https://www.scrapethissite.com/pages/advanced/?gotcha=login", fill out, and submit the form. Any value for login and password will do. (Disclaimer: you have to add the URL as an "action" attribute after creating the form, see [this tutorial](https://github.com/tidyverse/rvest/issues/319). -- `login_form$action <- url`) -->
+
+<!-- ```{r eval=FALSE} -->
+<!-- url <- "https://www.scrapethissite.com/pages/advanced/?gotcha=login" -->
+
+<!-- #extract and set login form here -->
+
+<!-- login_form$action <- url # add url as action attribute -->
+
+<!-- # submit form -->
+<!-- base_session <- session("https://www.scrapethissite.com/pages/advanced/?gotcha=login") %>%  -->
+<!--   session_submit(login_form)  -->
+<!-- ``` -->
+
+<!-- 3. Scrape 10 profile timelines from the following list. Check the [documentation](https://cran.r-project.org/web/packages/rtweet/vignettes/intro.html) for instructions. -->
+
+<!-- ```{r eval=FALSE} -->
+<!-- library(rtweet) -->
+
+<!-- uk_mps <- lists_members( -->
+<!--   list_id = "217199644" -->
+<!-- )  -->
+<!-- ``` -->
+
 ## Day 3
 
-1. Scrape the (British MPs Wikipedia page)[https://en.wikipedia.org/wiki/List_of_MPs_elected_in_the_2019_United_Kingdom_general_election].
-  a. Scrape the table containing data on all individual MPs. (Hint: you can select and remove single lines using `slice()`, e.g., `tbl %>% slice(1)` retains only the first line, `tbl %>% slice(-1)` removes only the first line.)
-  b. Extract the links linking to individual pages. Make them readable using `url_absolute()` – `url_absolute("/kdfnndfkok", base = "https://wikipedia.com")` --> `"https://wikipedia.com/kdfnndfkok"`. Add the links to the table from 1a.
-  c. Scrape the textual content of the **first** MP’s Wikipedia page.
-  d. (ADVANCED – feel free to move on to task 2.) Wrap 1c. in a function called `scrape_mp_wiki()`.
+1. Download all movies from the (IMDb Top250 best movies of all time list)[https://www.imdb.com/chart/top/?ref_=nv_mv_250]. Put them in a tibble with the columns `rank` -- in numeric format, `title`, `url` to IMDb entry, `rating` -- in numeric format.
 
-2. Download all movies from the (IMDb Top250 best movies of all time list)[https://www.imdb.com/chart/top/?ref_=nv_mv_250]. Put them in a tibble with the columns `rank` -- in numeric format, `title`, `url` to IMDb entry, `rating` -- in numeric format.
+```{r}
+example_tbl <- tibble(
+  a = 1:10,
+  b = 11:20, # vectors must have the same length
+  c = "c" # or length 1
+)
+example_tbl
+
+# imdb <- read_html("https://www.imdb.com/chart/top/?ref_=nv_mv_250")
+# 
+# imbd_elements <- imdb %>% html_elements(xpath = "//td[@class='titleColumn']")
+# 
+# library(tidyverse)
+# tibble(
+#   tittle = imbd_elements %>% html_text2(),
+#   link = imbd_elements %>% html_attr(name = "href")
+# ) %>% 
+#   glimpse()
+
+imdb_top250 <- read_html("https://www.imdb.com/chart/top/?ref_=nv_mv_250")
+
+tibble(
+  rank = imdb_top250 %>%
+    # html_elements(".titleColumn a") %>%
+    html_elements(xpath = "//td[@class='titleColumn']") %>%
+    html_text2() %>% 
+    str_extract("^[0-9]+(?=\\.)") %>% 
+    parse_integer(),
+  title = imdb_top250 %>%
+    # html_elements(".titleColumn a") %>%
+    html_elements(xpath = "//td[@class='titleColumn']/a") %>%
+    html_text2(),
+  url = imdb_top250 %>% 
+    html_elements(xpath = "//td[@class='titleColumn']/a") %>% 
+    html_attr(name = "href"),
+  rating = imdb_top250 %>%
+    html_elements(xpath = "//td[@class='ratingColumn imdbRating']") %>%
+    html_text2(),
+    
+)
+
+```
+
+2. Scrape the (British MPs Wikipedia page)[https://en.wikipedia.org/wiki/List_of_MPs_elected_in_the_2019_United_Kingdom_general_election].
+  a. Scrape the table containing data on all individual MPs. (Hint: you can select and remove single lines using `slice()`, e.g., `tbl %>% slice(1)` retains only the first line, `tbl %>% slice(-1)` removes only the first line.)
+```{r}
+tables <- read_html("https://en.wikipedia.org/wiki/List_of_MPs_elected_in_the_2019_United_Kingdom_general_election") %>% 
+  html_elements("#elected-mps") %>% 
+  html_table() %>%
+  pluck(1)
+
+tables <- tables[1:650,]
+```
+  b. Extract the links linking to individual pages. Make them readable using `url_absolute()` – `url_absolute("/kdfnndfkok", base = "https://wikipedia.com")` --> `"https://wikipedia.com/kdfnndfkok"`. Add the links to the table from 1a.
+```{r}
+links <- read_html("https://en.wikipedia.org/wiki/List_of_MPs_elected_in_the_2019_United_Kingdom_general_election") %>% 
+  html_elements("#elected-mps a") %>%
+  html_attr('href') %>%
+  url_absolute("https://wikipedia.com/")
+
+links
+```
+  c. Scrape the textual content of the **first** MP’s Wikipedia page.
+```{r}
+
+```
+  d. (ADVANCED) Wrap 1c. in a function called `scrape_mp_wiki()`.
+```{r}
+
+```
 
 3. Scrape the 10 first pages of [R-bloggers](https://www.r-bloggers.com) in an automated fashion. Make sure to take breaks between requests by including `Sys.sleep(2)`.
-  a. Do so using the url vector we created above.
+  a. Do so using the url vector we created.
   b. Do so by getting the link for the next page and a loop.
   c. Do so by using `html_session()` in a loop.
+```{r}
+for (i in 1:10){
+  #write code here...
+  Sys.sleep(2)
+}
+```
+
 
 ## Day 4
 

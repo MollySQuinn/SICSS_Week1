@@ -202,7 +202,18 @@ for (i in 1:10){
 ### Regexes
 
 1.Write a regex for Swedish mobile number. Test it with `str_detect("+46 71-738 25 33", "[insert your regex here]")`. 
+
+```{r}
+str_detect("+46 71-738 25 33", "\\+\\d{2} \\d{2}-\\d{3} \\d{2} \\d{2}")
+```
+
 2. Find all Mercedes in the `mtcars` data set.
+```{r}
+manufacturers <- mtcars %>% 
+  rownames_to_column(var = "car_model") %>% 
+  filter(str_detect(car_model, 'Merc'))
+```
+
 3. Take the IMDb file (`imdb <- read_csv("https://www.dropbox.com/s/81o3zzdkw737vt0/imdb2006-2016.csv?dl=1")`) and split the `Genre` column into different columns (hint: look at the `tidyr::separate()` function). How would you do it if `Genre` were a vector using `str_split_fixed()`?
 4. Take this vector of heights: `heights <- c("1m30cm", "2m01cm", "3m10cm")`
     a. How can you extract the meters using the negative look behind?
